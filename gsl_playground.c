@@ -8,7 +8,7 @@ gsl_rng *r;
 
 int main()
 {
-  FILE *f = fopen("logs.txt", "w");
+  FILE *f = fopen("pg_logs.txt", "w");
   log_set_fp(f);
   gsl_rng_env_setup();
   r = gsl_rng_alloc(gsl_rng_default);

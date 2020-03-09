@@ -1,6 +1,16 @@
 import numpy as np
 import math
+import logging
 from model import model
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+logfile_handler = logging.FileHandler('mcmc.log')
+formatter = logging.Formatter(
+    '%(asctime)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+logfile_handler.setFormatter(formatter)
+logger.addHandler(logfile_handler)
 
 mcmc_model = model()
 
@@ -159,6 +169,8 @@ def read_model(file):
     a, b = compute_lifespan()
     mcmc_model.a = a
     mcmc_model.b = b
+
+    logger.debug(a)
 
     c, d = init_log_prob()
     mcmc_model.c = c
