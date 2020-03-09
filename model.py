@@ -1,6 +1,6 @@
 class model():
 
-    # def __init__(self, N, M, X, a, b, pi, rpi, h, c, d, loglik, tr0, tr1, fa0, fa1, tr0a, tr1a, fa0a, fa1a, Nh):
+    # def __init__(self, N, M, X, a, b, pi, rpi, H, c, d, loglik, tr0, tr1, fa0, fa1, tr0a, tr1a, fa0a, fa1a, Nh):
     #     self.N = N
     #     self.M = M
     #     self.X = X
@@ -8,7 +8,7 @@ class model():
     #     self.b = b
     #     self.pi = pi
     #     self.rpi = rpi
-    #     self.h = h
+    #     self.H = H
     #     self.c = c
     #     self.d = d
     #     self.loglik = loglik
