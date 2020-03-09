@@ -100,14 +100,13 @@ def compute_trfa_count(X, N, M, pi, rpi, a, b):
 
 
 def compute_loglike(M, c, d, tr0, tr1, fa0, fa1):
-    loglike = 0.0
+    loglike = 0
     for m in range(M):
         cur_c = c[m]
         cur_d = d[m]
-        loglike += tr0[m]*math.log(1-math.exp(cur_c),
-                                   math.e) + fa0[m]*(cur_d) + fa1
-        [m]*(cur_c) + tr1[m]*math.log(1-math.exp(cur_d), math.e)
-        print(loglike)
+        temp_sum = tr0.item(m)*math.log(1-math.exp(cur_c),
+                                        math.e) + fa0.item(m)*(cur_d) + fa1.item(m)*(cur_c) + tr1.item(m)*math.log(1-math.exp(cur_d), math.e)
+        loglike += temp_sum
     return loglike
 
 
@@ -146,6 +145,6 @@ if __name__ == "__main__":
     mcmc_model.fa1a = fa1a
 
     mcmc_model.loglike = compute_loglike(M, c, d, tr0, tr1, fa0, fa1)
-    # print(mcmc_model.loglike)
+    print(mcmc_model.loglike)
 
     f.close()
