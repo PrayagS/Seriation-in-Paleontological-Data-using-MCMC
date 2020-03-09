@@ -1,0 +1,1 @@
+2020-03-09 22:06:41 TRACE gsl_playground.c:25: HELLO WORLD

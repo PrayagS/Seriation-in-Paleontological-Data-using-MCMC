@@ -2,11 +2,14 @@
 #include <gsl/gsl_permutation.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_rng.h>
+#include "log.h"
 
 gsl_rng *r;
 
 int main()
 {
+  FILE *f = fopen("logs.txt", "w");
+  log_set_fp(f);
   gsl_rng_env_setup();
   r = gsl_rng_alloc(gsl_rng_default);
 
@@ -18,6 +21,8 @@ int main()
       gsl_matrix_int_set(X, i, j, i + j);
     }
   }
+
+  log_trace("HELLO WORLD");
 
   for (size_t i = 0; i < 3; i++)
   {
