@@ -147,9 +147,10 @@ def compute_loglike():
     for m in range(M):
         cur_c = c[m]
         cur_d = d[m]
-        temp_sum = tr0.item(m)*math.log(1-math.exp(cur_c),
-                                        math.e) + fa0.item(m)*(cur_d) + fa1.item(m)*(cur_c) + tr1.item(m)*math.log(1-math.exp(cur_d), math.e)
+        temp_sum = int(tr0[m])*math.log(1-math.exp(cur_c),
+                                        math.e) + int(fa0[m])*(cur_d) + int(fa1[m])*(cur_c) + int(tr1[m])*math.log(1-math.exp(cur_d), math.e)
         loglike += temp_sum
+        print(loglike)
     return loglike
 
 
@@ -187,5 +188,5 @@ def read_model(file):
     mcmc_model.fa1a = fa1a
 
     mcmc_model.loglike = compute_loglike()
-
+    print(mcmc_model.loglike)
     return mcmc_model
