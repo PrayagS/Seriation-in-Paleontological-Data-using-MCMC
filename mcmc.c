@@ -399,11 +399,25 @@ void mcmc_randomize(mcmc_model *x)
   for (i = 0; i < x->N; i++)
     p[i] = i;
 
+  // printf("p\n");
+  // for (size_t i = 0; i < x->N; i++)
+  // {
+  //   printf("%d ", p[i]);
+  // }
+  // printf("\n\n");
+
   /*
    * q will contain x->nh indices, in order.
    * q will have nh sites randomly taken from p which contains N sites
    */
   gsl_ran_choose(r, q, x->nh, p, x->N, sizeof(int));
+
+  // printf("q\n");
+  // for (size_t i = 0; i < x->nh; i++)
+  // {
+  //   printf("%d ", q[i]);
+  // }
+  // printf("\n\n");
 
   for (i = j = k = 0; i < x->N; i++)
   {
@@ -416,8 +430,23 @@ void mcmc_randomize(mcmc_model *x)
       p[k++] = i;
     }
   }
+  // printf("\n\n");
+
+  // printf("p\n");
+  // for (size_t i = 0; i < x->N; i++)
+  // {
+  //   printf("%d ", p[i]);
+  // }
+  // printf("\n\n");
 
   gsl_ran_shuffle(r, p, x->N - x->nh, sizeof(int));
+
+  // printf("p\n");
+  // for (size_t i = 0; i < x->N; i++)
+  // {
+  //   printf("%d ", p[i]);
+  // }
+  // printf("\n\n");
 
   for (i = j = k = 0; i < x->N; i++)
   {

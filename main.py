@@ -17,7 +17,6 @@ if __name__ == "__main__":
     logger.debug('STARTED')
     f = open("Dataset/g10s10.txt", 'r')
     mcmc_model = read_model(f)
-    logger.debug(mcmc_model.rpi)
     seed = 42  # Seed for the RNG
     r = Random()
     r.seed(seed)
