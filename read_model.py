@@ -155,38 +155,18 @@ def compute_loglike():
 
 
 def read_model(file):
-    N, M = read_no_of_sites_taxa(file)
-    mcmc_model.N = N
-    mcmc_model.M = M
+    mcmc_model.N, mcmc_model.M = read_no_of_sites_taxa(file)
 
-    X, H, Nh = construct_matrix(file)
-    mcmc_model.X = X
-    mcmc_model.H = H
-    mcmc_model.Nh = Nh
+    mcmc_model.X, mcmc_model.H, mcmc_model.Nh = construct_matrix(file)
 
     mcmc_model.pi = np.arange(0, mcmc_model.N, 1)
     mcmc_model.rpi = np.argsort(mcmc_model.pi)
 
-    a, b = compute_lifespan()
-    mcmc_model.a = a
-    mcmc_model.b = b
+    mcmc_model.a, mcmc_model.b = compute_lifespan()
 
-    logger.debug(a)
+    mcmc_model.c, mcmc_model.d = init_log_prob()
 
-    c, d = init_log_prob()
-    mcmc_model.c = c
-    mcmc_model.d = d
-
-    tr0, tr1, fa0, fa1, tr0a, tr1a, fa0a, fa1a = compute_trfa_count()
-    mcmc_model.tr0 = tr0
-    mcmc_model.tr1 = tr1
-    mcmc_model.fa0 = fa0
-    mcmc_model.fa1 = fa1
-    mcmc_model.tr0a = tr0a
-    mcmc_model.tr1a = tr1a
-    mcmc_model.fa0a = fa0a
-    mcmc_model.fa1a = fa1a
+    mcmc_model.tr0, mcmc_model.tr1, mcmc_model.fa0, mcmc_model.fa1, mcmc_model.tr0a, mcmc_model.tr1a, mcmc_model.fa0a, mcmc_model.fa1a = compute_trfa_count()
 
     mcmc_model.loglike = compute_loglike()
-    print(mcmc_model.loglike)
     return mcmc_model
