@@ -82,24 +82,24 @@ main(int argc, char *argv[])
    */
   mcmc_randomize(&x);
 
-  // mcmc_consistent(&x);
+  mcmc_consistent(&x);
 
   /*
    * Burn-in.
    */
-  // for (i = 0; i < tb; i++)
-  // {
-  //   mcmc_sample(&x);
-  // }
+  for (i = 0; i < tb; i++)
+  {
+    mcmc_sample(&x);
+  }
 
   /*
    * Sampling.
    */
-  // for (i = 0; i < ts; i++)
-  // {
-  //   mcmc_sample(&x);
-  //   mcmc_save(&x, stdout);
-  // }
+  for (i = 0; i < ts; i++)
+  {
+    mcmc_sample(&x);
+    // mcmc_save(&x, stdout);
+  }
 
   // if (mcmc_consistent(&x))
   // {
@@ -113,7 +113,7 @@ main(int argc, char *argv[])
 
   return 0;
 }
-/* end of main */
+/* end oif main */
 #endif
 
 int mcmc_sample(mcmc_model *x)
@@ -609,6 +609,12 @@ gsl_vector *mcmc_logtop(gsl_vector *p, int n)
  * care to avoid over- or underflows.
  */
 {
+  for (size_t i = 0; i < n; i++)
+  {
+    printf("%lf ", p[i]);
+  }
+  printf("\n\n");
+
   int i;
   double x, y, z;
 
@@ -625,6 +631,12 @@ gsl_vector *mcmc_logtop(gsl_vector *p, int n)
   }
   for (i = 0; i < n; i++)
     gsl_vector_set(p, i, gsl_vector_get(p, i) / x);
+
+  for (size_t i = 0; i < n; i++)
+  {
+    printf("%lf ", p[i]);
+  }
+  printf("\n\n");
 
   return p;
 }

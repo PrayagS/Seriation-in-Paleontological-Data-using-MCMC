@@ -2,7 +2,8 @@ import logging
 from random import Random
 from model import model
 from read_model import read_model
-from randomize import mcmc_randomize
+from randomize import mcmc_randomize, check_consistency
+from sampling import sample
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -21,4 +22,6 @@ if __name__ == "__main__":
     r = Random()
     r.seed(seed)
     mcmc_randomize(mcmc_model, r)
+    check_consistency(mcmc_model)
+    sample(mcmc_model, r)
     f.close()
