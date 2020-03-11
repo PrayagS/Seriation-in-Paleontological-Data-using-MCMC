@@ -15,6 +15,8 @@ logger.addHandler(logfile_handler)
 
 LOGEPSILON = -32.236191301916641
 
+# CHANGED
+
 # iteration of samples; each block of 10 samples
 
 # mcmc_sample
@@ -231,82 +233,84 @@ def permute(A, P, n):
             P[next] -= n
             next = temp
 
-def samplepi2(model,swp):
-    if swp!=0 :
-        i=random.randrange(0,model.N)
-        j=random.randrange(0,model.N-1)
-        if j>=i :
-            j+=1 ;
-        else :
+
+def samplepi2(model, swp):
+    if swp != 0:
+        i = random.randrange(0, model.N)
+        j = random.randrange(0, model.N-1)
+        if j >= i:
+            j += 1
+        else:
             n = i
             i = j
             j = n
     else:
-        i = random.randrange(0,model.N-1)
+        i = random.randrange(0, model.N-1)
         j = i+1
-    
+
     m = 0
-    for n in range(i,j+1):
+    for n in range(i, j+1):
         m += model.H[model.rpi[n]]
         if m > 1:
             return 0
-    
-    inc1 = random.randrange(0,2)
-    inc2 = random.randrange(0,2)
+
+    inc1 = random.randrange(0, 2)
+    inc2 = random.randrange(0, 2)
 
     delta = 0.0
 
     for m in range(model.M):
-        dt0 , df0, dt1, df1 = [0]*4
+        dt0, df0, dt1, df1 = [0]*4
         cur_a = model.a[m]
         cur_b = model.b[m]
-        ain  = ininterval(cur_a,i,j+1,inc1,inc2)
-        binn = ininterval(cur_b,i,j+1,inc1,inc2)
+        ain = ininterval(cur_a, i, j+1, inc1, inc2)
+        binn = ininterval(cur_b, i, j+1, inc1, inc2)
         if ain and !binn:
-            for n in range(i,a):
+            for n in range(i, a):
                 if model.X[model.rpi[n]][m]:
-                    dt1+=1
-                    df1-=1
+                    dt1 += 1
+                    df1 -= 1
                 else:
-                    dt0-=1
-                    df0+=1
-            for n in range(a,j+1):
+                    dt0 -= 1
+                    df0 += 1
+            for n in range(a, j+1):
                 if model.X[model.rpi[n]][m]:
-                    dt1-=1
-                    df1+=1
+                    dt1 -= 1
+                    df1 += 1
                 else:
-                    dt0+=1
-                    df0-=1
+                    dt0 += 1
+                    df0 -= 1
         elif (!ain and binn):
-            for n in range(i,b):
+            for n in range(i, b):
                 if model.X[model.rpi[n]][m]:
-                    dt1-=1
-                    df1+=1
+                    dt1 -= 1
+                    df1 += 1
                 else:
-                    dt0+=1
-                    df0-=1
-            for n in range(b,j+1):
+                    dt0 += 1
+                    df0 -= 1
+            for n in range(b, j+1):
                 if model.X[model.rpi[n]][m]:
-                    dt1+=1
-                    df1-=1
+                    dt1 += 1
+                    df1 -= 1
                 else:
-                    dt0-=1
-                    df0+=1
-        
+                    dt0 -= 1
+                    df0 += 1
+
         cur_c = model.c[m]
         cur_d = model.d[m]
 
-        delta += dt0 * math.log(1-math.exp(cur_c),math.e) * df0*d + dt1*math.log(1.0 - math.exp(d), math.e) + df1*c
+        delta += dt0 * math.log(1-math.exp(cur_c), math.e) * \
+            df0*d + dt1*math.log(1.0 - math.exp(d), math.e) + df1*c
     while(True):
         k = random.random()
-        if k!= 0.0:
+        if k != 0.0:
             break
     if delta >= 0.0 or delta > log(k):
         for m in range(model.M):
             cur_a = model.a[m]
             cur_b = model.b[m]
-            ain = ininterval(cur_a,i,j+1,inc1,inc2)
-            binn = ininterval(cur_b,i,j+1,inc1,inc2)
+            ain = ininterval(cur_a, i, j+1, inc1, inc2)
+            binn = ininterval(cur_b, i, j+1, inc1, inc2)
             if ain and !binn:
                 model.a[m] = i+j+1-cur_a
             elif !ain and binn:
@@ -314,22 +318,22 @@ def samplepi2(model,swp):
             elif ain and binn:
                 model.b[m] = i+j+1 - a
                 model.a[m] = i+j+1 - b
-        
-        for n in range(i, (i+1)/2 +1):
+
+        for n in range(i, (i+1)/2 + 1):
             m = mode.rpi[n]
             model.rpi[n] = model.rpi[i+j-n]
             model.rpi[i+j-n] = m
-        
+
         model.pi = np.argsort(model.rpi)
         model.loglike += delta
         model.tr0, model.tr1, model.fa0, model.fa1, model.tr0a, model.tr1a, model.fa0a, model.fa1a = compute_trfa_count(
-        model)
+            model)
         return 1
     return 0
 
 
-def ininterval(i,a,b,inc1,inc2):
-    if a>b:
+def ininterval(i, a, b, inc1, inc2):
+    if a > b:
         rr = a
         a = b
         b = rr
@@ -341,6 +345,6 @@ def ininterval(i,a,b,inc1,inc2):
         if inc2:
             rr = (i <= b)
         else:
-            rr = (i<b)
-    
+            rr = (i < b)
+
     return rr
