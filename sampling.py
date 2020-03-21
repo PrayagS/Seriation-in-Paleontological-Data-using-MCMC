@@ -2,7 +2,7 @@ import numpy as np
 import logging
 import random
 import math
-from read_model import compute_loglike
+from read_model import compute_loglike, compute_trfa_count
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -27,15 +27,15 @@ def sample(model, r):
 
     p = []
     for i in range(10):
-        cc += samplec(model)
-        cd += sampled(model)
+        cc += samplec(model, r)
+        cd += sampled(model, r)
         cab += sampleab(model, r)
 
-        cpi21 += samplepi2(model, 1)
+        cpi21 += samplepi2(model, 1, r)
         for j in range(5):
-            cpi1 += samplepi1(model)
-            cpi20 += samplepi2(model, 0)
-            cpi3 += samplepi3(model, p)
+            cpi1 += samplepi1(model, r)
+            cpi20 += samplepi2(model, 0, r)
+            cpi3 += samplepi3(model, p, r)
 
     count += 1
 
@@ -48,7 +48,7 @@ def samplec(model, r):
     # Updates c with MH step. Returns number of accepted samples
     y = model.c[0]
     samplebeta(y, model.fa1a, model.tr0a, math.log(
-        0.001, math.e), math.log(0.1, math.e))
+        0.001, math.e), math.log(0.1, math.e), r)
     for m in range(model.M):
         model.c[m] = y
     return 1
@@ -67,11 +67,11 @@ def samplebeta(x, a, b, low, high, r):
     return x
 
 
-def sampled(model):
+def sampled(model, r):
     # Updates d with MH step. Returns number of accepted samples
     y = model.d[0]
     samplebeta(y, model.fa0a, model.tr1a, math.log(
-        0.2, math.e), math.log(0.8, math.e))
+        0.2, math.e), math.log(0.8, math.e), r)
     for m in range(model.M):
         model.d[m] = y
     return 1
@@ -94,7 +94,7 @@ def sampleab(model, r):
         v = model.X[:, m]
         permute(v, model.rpi, model.N)
 
-        t = model.a[m]
+        t = int(model.a[m])
         t0 = model.tr0[m]
         f0 = model.fa0[m]
         t1 = model.tr1[m]
@@ -104,20 +104,20 @@ def sampleab(model, r):
         cur_d = model.d[m]
 
         t0, f0, t1, f1 = aux(
-            model, v, model.b[m], cur_c, cur_d, t, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r)
+            model, v, int(model.b[m]), cur_c, cur_d, t, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r)
         if t != model.a[m]:
             model.a[m] = t
             count += 1
 
-        v.reverse()
+        v = np.flip(v, 0)
 
-        t = model.N - model.b[m]
+        t = int(model.N - model.b[m])
         t0, f0, t1, f1 = aux(
-            model, v, model.N - model.a[m], cur_c, cur_d, t, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r)
+            model, v, int(model.N - model.a[m]), cur_c, cur_d, t, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r)
         model.tr0[m] = t0
         model.fa0[m] = f0
         model.tr1[m] = t1
-        model.f1[m] = f1
+        model.fa1[m] = f1
         if(t != model.N - model.b[m]):
             moodel.b[m] = model.N - t
             count += 1
@@ -141,9 +141,8 @@ def sampleab(model, r):
 def aux(model, x, b, c, d, a, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r):
 
     q[a] = 0.0
-
-    cc = math.log(1.0 - math.exp(c))
-    dd = math.log(1.0 - math.exp(d))
+    cc = math.log(1.0 - math.exp(c), math.e)
+    dd = math.log(1.0 - math.exp(d), math.e)
 
     for i in reversed(range(a)):
         if(x[i]):
@@ -171,7 +170,7 @@ def aux(model, x, b, c, d, a, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r):
             df1[i] = df1[i-1]
         i += 1
 
-    for i in range(b):
+    for i in range(b+1):
         q[i] = dt0[i] * cc + df0[i] * d + dt1[i] * dd + df1[i] * c
 
     a = randompick(logtop(q, b+1), b+1, r)
@@ -200,7 +199,7 @@ def logtop(p, n):
             z = p[i]
     x = 0.0
     for i in range(n):
-        y = math.exp(math.max(LOGEPSILON, p[i]-z))
+        y = math.exp(max(LOGEPSILON, p[i]-z))
         p[i] = y
         x += y
     for i in range(n):
@@ -234,10 +233,10 @@ def permute(A, P, n):
             next = temp
 
 
-def samplepi2(model, swp):
-    if swp != 0:
-        i = random.randrange(0, model.N)
-        j = random.randrange(0, model.N-1)
+def samplepi2(model, swap, r):
+    if not swap:
+        i = r.randrange(0, model.N)
+        j = r.randrange(0, model.N-1)
         if j >= i:
             j += 1
         else:
@@ -245,7 +244,7 @@ def samplepi2(model, swp):
             i = j
             j = n
     else:
-        i = random.randrange(0, model.N-1)
+        i = r.randrange(0, model.N-1)
         j = i+1
 
     m = 0
@@ -254,8 +253,8 @@ def samplepi2(model, swp):
         if m > 1:
             return 0
 
-    inc1 = random.randrange(0, 2)
-    inc2 = random.randrange(0, 2)
+    inc1 = r.randrange(0, 2)
+    inc2 = r.randrange(0, 2)
 
     delta = 0.0
 
@@ -263,32 +262,32 @@ def samplepi2(model, swp):
         dt0, df0, dt1, df1 = [0]*4
         cur_a = model.a[m]
         cur_b = model.b[m]
-        ain = ininterval(cur_a, i, j+1, inc1, inc2)
-        binn = ininterval(cur_b, i, j+1, inc1, inc2)
-        if ain and !binn:
-            for n in range(i, a):
+        a_in = ininterval(cur_a, i, j+1, inc1, inc2)
+        b_in = ininterval(cur_b, i, j+1, inc1, inc2)
+        if a_in and not b_in:
+            for n in range(i, cur_a):
                 if model.X[model.rpi[n]][m]:
                     dt1 += 1
                     df1 -= 1
                 else:
                     dt0 -= 1
                     df0 += 1
-            for n in range(a, j+1):
+            for n in range(cur_a, j+1):
                 if model.X[model.rpi[n]][m]:
                     dt1 -= 1
                     df1 += 1
                 else:
                     dt0 += 1
                     df0 -= 1
-        elif (!ain and binn):
-            for n in range(i, b):
+        elif (not a_in and b_in):
+            for n in range(i, cur_b):
                 if model.X[model.rpi[n]][m]:
                     dt1 -= 1
                     df1 += 1
                 else:
                     dt0 += 1
                     df0 -= 1
-            for n in range(b, j+1):
+            for n in range(cur_b, j+1):
                 if model.X[model.rpi[n]][m]:
                     dt1 += 1
                     df1 -= 1
@@ -299,28 +298,30 @@ def samplepi2(model, swp):
         cur_c = model.c[m]
         cur_d = model.d[m]
 
-        delta += dt0 * math.log(1-math.exp(cur_c), math.e) * \
-            df0*d + dt1*math.log(1.0 - math.exp(d), math.e) + df1*c
+        delta += dt0 * math.log(1-math.exp(cur_c), math.e) + \
+            df0*cur_d + dt1*math.log(1.0 - math.exp(cur_d), math.e) + df1*cur_c
+    k = 0.0
     while(True):
-        k = random.random()
+        k = r.random()
         if k != 0.0:
             break
-    if delta >= 0.0 or delta > log(k):
+    logger.debug(k)
+    if delta >= 0.0 or delta > math.log(k, math.e):
         for m in range(model.M):
             cur_a = model.a[m]
             cur_b = model.b[m]
-            ain = ininterval(cur_a, i, j+1, inc1, inc2)
-            binn = ininterval(cur_b, i, j+1, inc1, inc2)
-            if ain and !binn:
+            a_in = ininterval(cur_a, i, j+1, inc1, inc2)
+            b_in = ininterval(cur_b, i, j+1, inc1, inc2)
+            if a_in and not b_in:
                 model.a[m] = i+j+1-cur_a
-            elif !ain and binn:
-                model.b[m] = i+j+1-cur_b
-            elif ain and binn:
-                model.b[m] = i+j+1 - a
-                model.a[m] = i+j+1 - b
+            elif not a_in and b_in:
+                model.b[m] = i+j+1-cur_a
+            elif a_in and b_in:
+                model.b[m] = i+j+1 - cur_a
+                model.a[m] = i+j+1 - cur_a
 
-        for n in range(i, (i+1)/2 + 1):
-            m = mode.rpi[n]
+        for n in range(i, (i+j)/2 + 1):
+            m = model.rpi[n]
             model.rpi[n] = model.rpi[i+j-n]
             model.rpi[i+j-n] = m
 
@@ -328,6 +329,7 @@ def samplepi2(model, swp):
         model.loglike += delta
         model.tr0, model.tr1, model.fa0, model.fa1, model.tr0a, model.tr1a, model.fa0a, model.fa1a = compute_trfa_count(
             model)
+        compute_trfa_count(model)
         return 1
     return 0
 
@@ -348,3 +350,231 @@ def ininterval(i, a, b, inc1, inc2):
             rr = (i < b)
 
     return rr
+
+
+def samplepi1(model, r):
+    i = r.randrange(model.N)
+    j = r.randrange(model.N-1)
+    if (j >= i):
+        j += 1
+    if (i < j):
+        ii = i
+        jj = j
+    else:
+        ii = j
+        jj = i
+
+    if (model.H[model.rpi[i]]):
+        m = 0
+        for n in range(ii, jj+1):
+            m += model.H[model.rpi[n]]
+            if (m > 1):
+                return 0
+
+    v = model.X[model.rpi[i], :]
+    delta = 0.0
+    dt0, df0, dt1, df1 = [0]*4
+    if (i < j):
+        for m in range(model.M):
+            a = model.a[m]
+            b = model.b[m]
+            a_in = (ii < a and a <= jj+1)
+            b_in = (ii < b and b <= jj+1)
+            if (a_in and not b_in):
+                if (v[m]):
+                    dt1 += 1
+                    df1 -= 1
+                else:
+                    dt0 -= 1
+                    df0 += 1
+            elif (not a_in and b_in):
+                if (v[m]):
+                    dt1 -= 1
+                    df1 += 1
+                else:
+                    dt0 += 1
+                    df0 -= 1
+            c = model.c[m]
+            d = model.d[m]
+            delta += dt0 * math.log(1-math.exp(c), math.e) + df0 * \
+                d + dt1 * math.log(1-math.exp(d), math.e) + df1 * c
+    else:
+        for m in range(model.M):
+            a = model.a[m]
+            b = model.b[m]
+            a_in = (ii < a and a <= jj)
+            b_in = (ii < b and b <= jj)
+            if (not a_in and b_in):
+                if (v[m]):
+                    dt1 += 1
+                    df1 -= 1
+                else:
+                    dt0 -= 1
+                    df0 += 1
+            elif (a_in and not b_in):
+                if (v[m]):
+                    dt1 -= 1
+                    df1 += 1
+                else:
+                    dt0 += 1
+                    df0 -= 1
+            c = model.c[m]
+            d = model.d[m]
+            delta += dt0 * math.log(1-math.exp(c), math.e) + df0 * \
+                d + dt1 * math.log(1-math.exp(d), math.e) + df1 * c
+
+    k = 0.0
+    while(True):
+        k = r.random()
+        if k != 0.0:
+            break
+    if (delta >= 0.0 or delta > math.log(k, math.e)):
+        if(i < j):
+            for m in range(model.M):
+                a = model.a[m]
+                b = model.b[m]
+                if (ii < a and a <= jj+1):
+                    model.a[m] = a-1
+                if (ii < b and b <= jj+1):
+                    model.b[m] = b-1
+            t = model.rpi[i]
+            for n in range(i, j):
+                model.rpi[n] = model.rpi[n+1]
+            model.rpi[j] = t
+        else:
+            for m in range(model.M):
+                a = model.a[m]
+                b = model.b[m]
+                if (ii <= a and a <= jj):
+                    model.a[m] = a+1
+                if (ii <= b and b <= jj):
+                    model.b[m] = b+1
+            t = model.rpi[i]
+            for n in range(i, j):
+                model.rpi[n] = model.rpi[n-1]
+            model.rpi[j] = t
+
+        model.pi = np.argsort(model.rpi)
+        model.loglike += delta
+        compute_trfa_count(model)
+        return 1
+    return 0
+
+
+def samplepi3(model, p, r):
+    if (model.N - model.Nh < 2):
+        return 0
+    n = r.randrange(0, model.N - model.Nh)
+    m = r.randrange(0, model.N - model.Nh - 1)
+    if (n <= m):
+        i = n
+        j = m+1
+    else:
+        i = m
+        j = n
+
+    n = 0
+    while(n <= i):
+        if (model.H[model.rpi[n]]):
+            i += 1
+            j += 1
+        n += 1
+    while (n <= j):
+        if (model.H[model.rpi[n]]):
+            j += 1
+        n += 1
+    n = i
+    m = j
+    while (n <= m):
+        if (model.H[model.rpi[n]]):
+            p[n] = n
+            n += 1
+        elif (model.H[model.rpi[m]]):
+            p[m] = m
+            m -= 1
+        else:
+            p[n] = m
+            p[m] = n
+            n += 1
+            m -= 1
+
+    nn, na, nb = [0]*3
+    inc1 = r.randrange(0, 2)
+    inc2 = r.randrange(0, 2)
+    delta = 0.0
+
+    for m in range(model.M):
+        dt0, df0, dt1, df1 = [0]*4
+        a = model.a[m]
+        b = model.b[m]
+        a_in = ininterval(a, i, j+1, inc1, inc2)
+        b_in = ininterval(b, i, j+1, inc1, inc2)
+        if (a_in and not b_in):
+            na = i + j + 1 - a
+            nb = b
+        elif (not a_in and b_in):
+            na = a
+            nb = i + j + 1 - b
+        elif (a_in and b_in):
+            na = i + j + 1 - b
+            nb = i + j + 1 - a
+        else:
+            na = a
+            nb = b
+
+        for n in range(i, j+1):
+            nn = p[n]
+            wasalive = (a <= n and n < b)
+            isalive = (na <= nn and nn < nb)
+            if (wasalive and not isalive):
+                if (model.X[model.rpi[n], m]):
+                    dt1 -= 1
+                    df1 += 1
+                else:
+                    df0 -= 1
+                    dt0 += 1
+            elif (not wasalive and isalive):
+                if (model.X[model.rpi[n], m]):
+                    dt1 += 1
+                    df1 -= 1
+                else:
+                    df0 += 1
+                    dt0 -= 1
+
+        c = model.c[m]
+        d = model.d[m]
+        delta += dt0 * math.log(1-math.exp(c), math.e) + df0 * \
+            d + dt1 * math.log(1-math.exp(d), math.e) + df1 * c
+
+    k = 0.0
+    while(True):
+        k = r.random()
+        if k != 0.0:
+            break
+
+    if (delta >= 0.0 or delta > math.log(k, math.e)):
+        for m in range(model.M):
+            a = model.a[m]
+            b = model.b[m]
+            a_in = ininterval(a, i, j+1, inc1, inc2)
+            b_in = ininterval(b, i, j+1, inc1, inc2)
+            if (a_in and not b_in):
+                model.a[m] = i+j+1-a
+            elif (not a_in and b_in):
+                model.b[m] = i+j+1-b
+            elif (a_in and b_in):
+                model.b[m] = i+j+1-a
+                model.a[m] = 1+j+1-b
+
+        for n in range(i, j+1):
+            a = p[n]
+            p[n] = model.rpi[n]
+
+        for n in range(i, j+1):
+            model.rpi[n] = p[n]
+
+        model.pi = np.argsort(model.rpi)
+        model.loglike += delta
+        compute_trfa_count()
+        return 1
+    return 0

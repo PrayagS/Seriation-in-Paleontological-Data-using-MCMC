@@ -98,15 +98,15 @@ main(int argc, char *argv[])
   for (i = 0; i < ts; i++)
   {
     mcmc_sample(&x);
-    // mcmc_save(&x, stdout);
+    mcmc_save(&x, stdout);
   }
 
-  // if (mcmc_consistent(&x))
-  // {
-  //   mcmc_print(&x, stderr);
-  //   fprintf(stderr, "main: error.\n");
-  //   exit(1);
-  // }
+  if (mcmc_consistent(&x))
+  {
+    mcmc_print(&x, stderr);
+    fprintf(stderr, "main: error.\n");
+    exit(1);
+  }
 
   mcmc_freemodel(&x);
   mcmc_free();
@@ -609,11 +609,11 @@ gsl_vector *mcmc_logtop(gsl_vector *p, int n)
  * care to avoid over- or underflows.
  */
 {
-  for (size_t i = 0; i < n; i++)
-  {
-    printf("%lf ", p[i]);
-  }
-  printf("\n\n");
+  // for (size_t i = 0; i < n; i++)
+  // {
+  //   printf("%lf ", p[i]);
+  // }
+  // printf("\n\n");
 
   int i;
   double x, y, z;
@@ -632,11 +632,11 @@ gsl_vector *mcmc_logtop(gsl_vector *p, int n)
   for (i = 0; i < n; i++)
     gsl_vector_set(p, i, gsl_vector_get(p, i) / x);
 
-  for (size_t i = 0; i < n; i++)
-  {
-    printf("%lf ", p[i]);
-  }
-  printf("\n\n");
+  // for (size_t i = 0; i < n; i++)
+  // {
+  //   printf("%lf ", p[i]);
+  // }
+  // printf("\n\n");
 
   return p;
 }
@@ -1136,8 +1136,8 @@ int mcmc_samplepi1(mcmc_model *x)
         }
         else
         {
-          df0--;
           dt0++;
+          df0--;
         }
       }
       c = gsl_vector_get(x->c, m);

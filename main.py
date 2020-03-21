@@ -18,10 +18,21 @@ if __name__ == "__main__":
     logger.debug('STARTED')
     f = open("Dataset/g10s10.txt", 'r')
     mcmc_model = read_model(f)
+    f.close()
     seed = 42  # Seed for the RNG
     r = Random()
     r.seed(seed)
     mcmc_randomize(mcmc_model, r)
     check_consistency(mcmc_model)
-    sample(mcmc_model, r)
-    f.close()
+
+    for i in range(1000):
+        sample(mcmc_model, r)
+
+    for i in range(1000):
+        sample(mcmc_model, r)
+        logger.debug(mcmc_model.a)
+        logger.debug(mcmc_model.b)
+        logger.debug(mcmc_model.pi)
+        logger.debug(mcmc_model.c)
+        logger.debug(mcmc_model.d)
+        logger.debug(mcmc_model.loglike)

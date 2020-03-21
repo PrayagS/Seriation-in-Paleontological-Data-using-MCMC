@@ -18,7 +18,6 @@ def mcmc_randomize(model, r):
 
     if (model.Nh == 0):  # Zero hard sites
         r.shuffle(model.pi)
-        logger.debug(model.pi)
         model.rpi = np.argsort(model.pi)
         # Recompute parameters
         model.tr0, model.tr1, model.fa0, model.fa1, model.tr0a, model.tr1a, model.fa0a, model.fa1a = compute_trfa_count(
