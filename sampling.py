@@ -119,7 +119,7 @@ def sampleab(model, r):
         model.tr1[m] = t1
         model.fa1[m] = f1
         if(t != model.N - model.b[m]):
-            moodel.b[m] = model.N - t
+            model.b[m] = model.N - t
             count += 1
 
         model.tr0a = 0
@@ -575,6 +575,6 @@ def samplepi3(model, p, r):
 
         model.pi = np.argsort(model.rpi)
         model.loglike += delta
-        compute_trfa_count()
+        compute_trfa_count(model)
         return 1
     return 0
