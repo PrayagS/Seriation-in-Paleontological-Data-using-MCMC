@@ -93,7 +93,7 @@ def compute_trfa_count(model):
     M = model.M
     X = model.X
     pi = model.pi
-    rpi = model.rpi
+    #rpi = model.rpi
     a = model.a
     b = model.b
 
