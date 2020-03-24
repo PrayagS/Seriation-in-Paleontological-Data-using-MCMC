@@ -32,6 +32,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <math.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
@@ -758,6 +759,9 @@ void mcmc_auxa(const gsl_vector_int *x, int b, double c, double d,
       gsl_vector_int_set(df1, i, gsl_vector_int_get(df1, i + 1));
     }
   }
+
+  printf("%d %d\n", *a + 1, b);
+  sleep(1);
   for (i = *a + 1; i <= b; i++)
   {
     if (gsl_vector_int_get(x, i - 1))
