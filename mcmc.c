@@ -760,8 +760,8 @@ void mcmc_auxa(const gsl_vector_int *x, int b, double c, double d,
     }
   }
 
-  printf("%d %d\n", *a + 1, b);
-  sleep(1);
+  // printf("%d %d\n", *a + 1, b);
+  // sleep(1);
   for (i = *a + 1; i <= b; i++)
   {
     if (gsl_vector_int_get(x, i - 1))
@@ -831,6 +831,15 @@ int mcmc_sampleab(mcmc_model *x)
   dt1 = gsl_vector_int_alloc(x->N + 1);
   df1 = gsl_vector_int_alloc(x->N + 1);
 
+  for (size_t i = 0; i < x->M; i++)
+  {
+    if (gsl_vector_int_get(x->b, i) > 124)
+    {
+      printf("%d ", gsl_vector_int_get(x->b, i));
+    }
+  }
+  printf("\n\n");
+  sleep(1);
   for (m = 0; m < x->M; m++)
   {
     gsl_matrix_int_get_col(v, x->X, m);

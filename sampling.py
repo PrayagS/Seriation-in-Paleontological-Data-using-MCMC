@@ -2,6 +2,7 @@ import numpy as np
 import logging
 import random
 import math
+from time import sleep
 from read_model import compute_loglike, compute_trfa_count
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,10 @@ def sampleab(model, r):
     dt1 = np.zeros(matrix_shape)
     df1 = np.zeros(matrix_shape)
 
+    for x in model.b:
+        if (int(x) > 124):
+            print(x)
+    sleep(1)
     for m in range(model.M):
         v = model.X[:, m]
         permute(v, model.rpi, model.N)
@@ -103,6 +108,7 @@ def sampleab(model, r):
         cur_c = model.c[m]
         cur_d = model.d[m]
 
+        sleep(1)
         t0, f0, t1, f1 = aux(
             model, v, int(model.b[m]), cur_c, cur_d, t, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r)
         if t != model.a[m]:
@@ -156,9 +162,10 @@ def aux(model, x, b, c, d, a, t0, f0, t1, f1, q, dt0, df0, dt1, df1, r):
             dt1[i] = dt1[i + 1]
             df1[i] = df1[i + 1]
 
+    # print(a + 1, b)
+    # sleep(1)
     i = a + 1
     while(i <= b):
-        print(i, b)
         if(x[i - 1]):
             dt0[i] = dt0[i - 1]
             df0[i] = df0[i - 1]
