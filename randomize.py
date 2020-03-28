@@ -7,9 +7,9 @@ from read_model import compute_trfa_count, compute_loglike, compute_lifespan
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-logfile_handler = logging.FileHandler('mcmc.log')
+logfile_handler = logging.FileHandler('mcmc.log', mode='w')
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    '%(asctime)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 logfile_handler.setFormatter(formatter)
 logger.addHandler(logfile_handler)
 
@@ -33,7 +33,7 @@ def mcmc_randomize(model, r):
     list.sort(hard_sites)
 
     # remove hard sites from all_sites
-    j, k = [0]*2
+    j, k = [0] * 2
     for i in range(model.N):
         if j == model.Nh:
             all_sites[k] = i
@@ -51,8 +51,8 @@ def mcmc_randomize(model, r):
     for i in range(model.N - model.Nh):
         all_sites[i] = temp_arr[i]
 
-    logger.debug(model.pi)
-    j, k = [0]*2
+    # logger.debug(model.pi)
+    j, k = [0] * 2
     for i in range(model.N):
         if model.H[i]:
             model.pi[i] = hard_sites[j]
@@ -72,7 +72,7 @@ def mcmc_randomize(model, r):
 
 
 def check_valid_permutation(arr, model):
-    hash_arr = [0 for i in range(max(arr)+1)]
+    hash_arr = [0 for i in range(max(arr) + 1)]
     for i in range(len(arr)):
         if arr[i] >= model.N:
             logger.error(arr[i])

@@ -8,9 +8,9 @@ from sampling import sample
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-logfile_handler = logging.FileHandler('mcmc.log')
+logfile_handler = logging.FileHandler('mcmc.log', mode='w')
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    '%(asctime)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 logfile_handler.setFormatter(formatter)
 logger.addHandler(logfile_handler)
 

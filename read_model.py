@@ -6,9 +6,9 @@ from model import model
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-logfile_handler = logging.FileHandler('mcmc.log')
+logfile_handler = logging.FileHandler('mcmc.log', mode='w')
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    '%(asctime)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 logfile_handler.setFormatter(formatter)
 logger.addHandler(logfile_handler)
 
@@ -67,10 +67,10 @@ def compute_lifespan(model):
             b[m] = N
         else:
             a[m] = n
-            n = N-1
-            while(n >= (a[m]-1) and not X[rpi[n]][m]):
+            n = N - 1
+            while(n >= (a[m] - 1) and not X[rpi[n]][m]):
                 n -= 1
-            b[m] = n+1
+            b[m] = n + 1
     return a, b
 
 
@@ -97,15 +97,15 @@ def compute_trfa_count(model):
     a = model.a
     b = model.b
 
-    n, m = [0]*2
-    tr0a, tr1a, fa0a, fa1a = [0]*4
+    n, m = [0] * 2
+    tr0a, tr1a, fa0a, fa1a = [0] * 4
     count_matrix_shape = (M, 1)
     tr0 = np.zeros(count_matrix_shape)
     tr1 = np.zeros(count_matrix_shape)
     fa0 = np.zeros(count_matrix_shape)
     fa1 = np.zeros(count_matrix_shape)
     for m in range(M):
-        t0, f0, t1, f1 = [0]*4
+        t0, f0, t1, f1 = [0] * 4
         for n in range(N):
             if (a[m] <= pi[n] and pi[n] < b[m]):
                 if (X[n][m]):
@@ -145,8 +145,8 @@ def compute_loglike(model):
     for m in range(M):
         cur_c = c[m]
         cur_d = d[m]
-        temp_sum = int(tr0[m])*math.log(1-math.exp(cur_c),
-                                        math.e) + int(fa0[m])*(cur_d) + int(fa1[m])*(cur_c) + int(tr1[m])*math.log(1-math.exp(cur_d), math.e)
+        temp_sum = int(tr0[m]) * math.log(1 - math.exp(cur_c),
+                                          math.e) + int(fa0[m]) * (cur_d) + int(fa1[m]) * (cur_c) + int(tr1[m]) * math.log(1 - math.exp(cur_d), math.e)
         loglike += temp_sum
     return loglike
 

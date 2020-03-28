@@ -8,9 +8,9 @@ from read_model import compute_loglike, compute_trfa_count
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-logfile_handler = logging.FileHandler('mcmc.log')
+logfile_handler = logging.FileHandler('mcmc.log', mode='w')
 formatter = logging.Formatter(
-    '%(asctime)s - %(name)s - %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    '%(asctime)s - %(name)s - %(message)s', datefmt='%H:%M:%S')
 logfile_handler.setFormatter(formatter)
 logger.addHandler(logfile_handler)
 
@@ -23,20 +23,41 @@ LOGEPSILON = -32.236191301916641
 # mcmc_sample
 
 
+def check_model(x):
+    for y in x:
+        if(y > 124):
+            logger.debug(y)
+
+
 def sample(model, r):
     count, cc, cd, cab, cpi1, cpi20, cpi21, cpi3 = [0] * 8
 
     p = [0 for i in range(model.N)]
     for i in range(10):
+        logger.debug(i)
         cc += samplec(model, r)
         cd += sampled(model, r)
+        # logger.debug('Before sampleab')
+        # check_model(model.b)
         cab += sampleab(model, r)
+        # logger.debug('After sampleab / Before samplepi2 GG')
+        # check_model(model.b)
 
         cpi21 += samplepi2(model, 1, r)
+        logger.debug('After samplepi2 GG / Before GG loop')
+        check_model(model.b)
         for j in range(5):
+            # logger.debug('Before samplepi1')
+            # check_model(model.b)
             cpi1 += samplepi1(model, r)
+            # logger.debug('After samplepi1 / Before samplepi2')
+            # check_model(model.b)
             cpi20 += samplepi2(model, 0, r)
+            logger.debug('After samplepi2 / Before samplepi3')
+            check_model(model.b)
             cpi3 += samplepi3(model, p, r)
+            # logger.debug('After samplepi3 / After GG loop')
+            # check_model(model.b)
 
     count += 1
 
@@ -91,9 +112,6 @@ def sampleab(model, r):
     dt1 = np.zeros(matrix_shape)
     df1 = np.zeros(matrix_shape)
 
-    for x in model.b:
-        if (int(x) > 124):
-            print(x)
     sleep(1)
     for m in range(model.M):
         v = model.X[:, m]
@@ -316,7 +334,7 @@ def samplepi2(model, swap, r):
         k = r.random()
         if k != 0.0:
             break
-    logger.debug(k)
+    # logger.debug(k)
     if delta >= 0.0 or delta > math.log(k, math.e):
         for m in range(model.M):
             cur_a = model.a[m]
@@ -326,10 +344,10 @@ def samplepi2(model, swap, r):
             if a_in and not b_in:
                 model.a[m] = i + j + 1 - cur_a
             elif not a_in and b_in:
-                model.b[m] = i + j + 1 - cur_a
+                model.b[m] = i + j + 1 - cur_b
             elif a_in and b_in:
                 model.b[m] = i + j + 1 - cur_a
-                model.a[m] = i + j + 1 - cur_a
+                model.a[m] = i + j + 1 - cur_b
 
         for n in range(i, int((i + j) / 2 + 1)):
             m = model.rpi[n]
@@ -340,7 +358,7 @@ def samplepi2(model, swap, r):
         model.loglike += delta
         model.tr0, model.tr1, model.fa0, model.fa1, model.tr0a, model.tr1a, model.fa0a, model.fa1a = compute_trfa_count(
             model)
-        compute_trfa_count(model)
+        # compute_trfa_count(model)
         return 1
     return 0
 
