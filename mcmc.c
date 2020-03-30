@@ -44,6 +44,18 @@
 #include "log.h"
 
 gsl_rng *r;
+double loglik_sum;
+
+void sum_up_loglik(mcmc_model *x)
+{
+  loglik_sum += x->loglik;
+}
+
+void print_exp_loglik()
+{
+  loglik_sum /= 1000;
+  printf("\n\n%.14f", loglik_sum);
+}
 
 #ifdef MCMCHAVEMAIN
 
@@ -99,12 +111,15 @@ main(int argc, char *argv[])
   for (i = 0; i < ts; i++)
   {
     mcmc_sample(&x);
-    mcmc_save(&x, stdout);
+    sum_up_loglik(&x);
+    // mcmc_print(&x, stdout);
   }
+
+  print_exp_loglik();
 
   if (mcmc_consistent(&x))
   {
-    mcmc_print(&x, stderr);
+    mcmc_print(&x, stdout);
     fprintf(stderr, "main: error.\n");
     exit(1);
   }
@@ -219,6 +234,8 @@ void mcmc_print(const mcmc_model *x, FILE *f)
     }
   }
   fprintf(f, " (%d total)\n", j);
+  fprintf(f, "Log-likelihood = %.14f\n", x->loglik);
+
 #ifdef MCMCPRINTDATAMATRIX
   fprintf(f, "Data matrix X:\n");
   for (i = 0; i < x->N; i++)
@@ -831,15 +848,6 @@ int mcmc_sampleab(mcmc_model *x)
   dt1 = gsl_vector_int_alloc(x->N + 1);
   df1 = gsl_vector_int_alloc(x->N + 1);
 
-  for (size_t i = 0; i < x->M; i++)
-  {
-    if (gsl_vector_int_get(x->b, i) > 124)
-    {
-      printf("%d ", gsl_vector_int_get(x->b, i));
-    }
-  }
-  printf("\n\n");
-  sleep(1);
   for (m = 0; m < x->M; m++)
   {
     gsl_matrix_int_get_col(v, x->X, m);
