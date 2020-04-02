@@ -47,7 +47,7 @@ typedef struct
 mcmc_model *mcmc_readmodel(mcmc_model *x, FILE *f, int manycd);
 int mcmc_sample(mcmc_model *x);
 void mcmc_print(const mcmc_model *x, FILE *f);
-void mcmc_save(const mcmc_model *x, FILE *f);
+void mcmc_save(const mcmc_model *x, FILE *f1, FILE *f2, FILE *f3);
 void mcmc_init(void);
 void mcmc_free(void);
 void mcmc_freemodel(mcmc_model *x);

@@ -34,6 +34,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <math.h>
+#include <string.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_matrix.h>
 #include <gsl/gsl_vector.h>
@@ -45,17 +46,51 @@
 
 gsl_rng *r;
 double loglik_sum;
+double c_sum;
+double d_sum;
+char *chain_index;
 
-void sum_up_loglik(mcmc_model *x)
+void compute_exp_data(mcmc_model *x)
 {
-  loglik_sum += x->loglik;
+  loglik_sum += -(x->loglik);
+  c_sum += exp(gsl_vector_get(x->c, 0));
+  d_sum += exp(gsl_vector_get(x->d, 0));
 }
 
-void print_exp_loglik()
+void print_exp_data(FILE *f)
 {
   loglik_sum /= 1000;
-  printf("\n\n%.14f", loglik_sum);
+  c_sum /= 1000;
+  d_sum /= 1000;
+  fprintf(f, "exp_loglik,exp_c,exp_d\n");
+  fprintf(f, "%.14f,%.14f,%.14f", loglik_sum, c_sum, d_sum);
 }
+
+void mcmc_save_chain(mcmc_model *x, FILE *f)
+/*
+ * Saves model x to stream f in machine-readable format.
+ * All parameters are in one space and tab separated line that
+ * ends with a newline. 
+ */
+{
+  int i;
+  for (i = 0; i < x->M; i++)
+    fprintf(f, "%d ", gsl_vector_int_get(x->a, i));
+  fprintf(f, ",");
+  for (i = 0; i < x->M; i++)
+    fprintf(f, "%d ", gsl_vector_int_get(x->b, i));
+  fprintf(f, ",");
+  for (i = 0; i < x->N; i++)
+    fprintf(f, "%d ", gsl_permutation_get(x->pi, i));
+  fprintf(f, ",");
+  for (i = 0; i < x->M; i++)
+    fprintf(f, "%.14f ", exp(gsl_vector_get(x->c, i)));
+  fprintf(f, ",");
+  for (i = 0; i < x->M; i++)
+    fprintf(f, "%.14f ", exp(gsl_vector_get(x->d, i)));
+  fprintf(f, ",%.14f\n", x->loglik);
+}
+/* end of mcmc_save */
 
 #ifdef MCMCHAVEMAIN
 
@@ -66,7 +101,6 @@ void print_exp_loglik()
 
 main(int argc, char *argv[])
 {
-
   FILE *f = fopen("mcmc_c.log", "a");
   log_set_fp(f);
 
@@ -76,6 +110,9 @@ main(int argc, char *argv[])
   switch (argc)
   {
   case 1:
+    break;
+  case 2:
+    chain_index = argv[1];
     break;
   case 4:
     if (sscanf(argv[1], "%d", &manycd) &&
@@ -108,14 +145,56 @@ main(int argc, char *argv[])
   /*
    * Sampling.
    */
+  char file_loc1[] = "Chains/chain_XX/taxa.csv";
+  char file_loc2[] = "Chains/chain_XX/sites.csv";
+  char file_loc3[] = "Chains/chain_XX/hard_sites.csv";
+  char file_loc4[] = "Chains/chain_XX/exp_data.csv";
+  char file_loc5[] = "Chains/chain_XX/chain_data.csv";
+  if (atoi(chain_index) > 9)
+  {
+    file_loc1[13] = chain_index[0];
+    file_loc2[13] = chain_index[0];
+    file_loc3[13] = chain_index[0];
+    file_loc4[13] = chain_index[0];
+    file_loc5[13] = chain_index[0];
+    file_loc1[14] = chain_index[1];
+    file_loc2[14] = chain_index[1];
+    file_loc3[14] = chain_index[1];
+    file_loc4[14] = chain_index[1];
+    file_loc5[14] = chain_index[1];
+  }
+  else
+  {
+    file_loc1[13] = '0';
+    file_loc2[13] = '0';
+    file_loc3[13] = '0';
+    file_loc4[13] = '0';
+    file_loc5[13] = '0';
+    file_loc1[14] = chain_index[0];
+    file_loc2[14] = chain_index[0];
+    file_loc3[14] = chain_index[0];
+    file_loc4[14] = chain_index[0];
+    file_loc5[14] = chain_index[0];
+  }
+  FILE *fchain = fopen(file_loc5, "w");
   for (i = 0; i < ts; i++)
   {
     mcmc_sample(&x);
-    sum_up_loglik(&x);
-    // mcmc_print(&x, stdout);
+    mcmc_save_chain(&x, fchain);
+    compute_exp_data(&x);
   }
 
-  print_exp_loglik();
+  FILE *fout1 = fopen(file_loc1, "w");
+  FILE *fout2 = fopen(file_loc2, "w");
+  FILE *fout3 = fopen(file_loc3, "w");
+  FILE *fout4 = fopen(file_loc4, "w");
+  print_exp_data(fout4);
+  mcmc_save(&x, fout1, fout2, fout3);
+  fclose(fout1);
+  fclose(fout2);
+  fclose(fout3);
+  fclose(fout4);
+  fclose(fchain);
 
   if (mcmc_consistent(&x))
   {
@@ -179,7 +258,7 @@ int mcmc_sample(mcmc_model *x)
 }
 /* end of mcmc_sample */
 
-void mcmc_save(const mcmc_model *x, FILE *f)
+void mcmc_save(const mcmc_model *x, FILE *f1, FILE *f2, FILE *f3)
 /*
  * Saves model x to stream f in machine-readable format.
  * All parameters are in one space and tab separated line that
@@ -187,21 +266,30 @@ void mcmc_save(const mcmc_model *x, FILE *f)
  */
 {
   int i;
+  fprintf(f1, "a,b,c,d\n");
   for (i = 0; i < x->M; i++)
-    fprintf(f, "%d ", gsl_vector_int_get(x->a, i));
-  fprintf(f, "\t");
-  for (i = 0; i < x->M; i++)
-    fprintf(f, "%d ", gsl_vector_int_get(x->b, i));
-  fprintf(f, "\t");
+    fprintf(f1, "%d,%d,%.14f,%.14f\n", gsl_vector_int_get(x->a, i), gsl_vector_int_get(x->b, i), exp(gsl_vector_get(x->c, i)), exp(gsl_vector_get(x->d, i)));
+  // for (i = 0; i < x->M; i++)
+  //   fprintf(f, "%d ", );
+  // fprintf(f, "\n");
+  fprintf(f2, "sites\n");
   for (i = 0; i < x->N; i++)
-    fprintf(f, "%d ", gsl_permutation_get(x->pi, i));
-  fprintf(f, "\t");
-  for (i = 0; i < x->M; i++)
-    fprintf(f, "%.14f ", exp(gsl_vector_get(x->c, i)));
-  fprintf(f, "\t");
-  for (i = 0; i < x->M; i++)
-    fprintf(f, "%.14f ", exp(gsl_vector_get(x->d, i)));
-  fprintf(f, "\t%.14f\n", x->loglik);
+    fprintf(f2, "%d\n", gsl_permutation_get(x->pi, i));
+  fprintf(f3, "i,pi_i\n");
+  for (i = 0; i < x->N; i++)
+  {
+    if (gsl_vector_int_get(x->h, i))
+    {
+      fprintf(f3, "%d,%d\n", i, gsl_permutation_get(x->pi, i));
+    }
+  }
+  // fprintf(f, "\n");
+  // for (i = 0; i < x->M; i++)
+  //   fprintf(f, "%.14f ", );
+  // fprintf(f, "\n");
+  // for (i = 0; i < x->M; i++)
+  //   fprintf(f, "%.14f ", );
+  // fprintf(f, "\n%.14f\n", x->loglik);
 }
 /* end of mcmc_save */
 
