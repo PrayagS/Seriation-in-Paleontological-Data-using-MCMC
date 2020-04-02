@@ -3,30 +3,45 @@ import subprocess
 import shlex
 import os
 from multiprocessing import Pool
+import multiprocessing
 import pandas as pd
 import numpy as np
 from scipy.stats import pearsonr
 import random
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 f = open('Dataset/g10s10.txt', mode='r')
 
 
-def run_chain(chain_index):
-    # seed = subprocess.check_output(
-    #     'od -vAn -N1 -tu1 < /dev/urandom', shell=True, text=True)
-    r = Random()
-    r.seed(chain_index)
-    os.environ['GSL_RNG_SEED'] = seed
+def generate_random_seed():
+    seed = subprocess.check_output(
+        'od -vAn -N1 -tu1 < /dev/urandom', shell=True, text=True)
+    return seed
+
+
+def run_chain(chain_index, old_seeds):
+    seed = generate_random_seed()
+    while (True):
+        seed = generate_random_seed()
+        if seed not in old_seeds:
+            old_seeds.append(seed)
+            break
+        else:
+            pass
+    os.environ['GSL_RNG_SEED'] = seed.strip()
     subprocess.call('./mcmc ' + str(chain_index) +
                     ' < Dataset/g10s10.txt', shell=True, stdout=subprocess.DEVNULL)
 
 
 def run_all_chains():
+    manager = multiprocessing.Manager()
+    old_seeds = manager.list()
     start = time.perf_counter()
 
     pool = Pool(processes=4)
-    x = [i for i in range(100)]
-    chains = pool.map(run_chain, x)
+    x = [(i, old_seeds) for i in range(100)]
+    chains = pool.starmap(run_chain, x)
     pool.terminate()
 
     finish = time.perf_counter()
@@ -52,7 +67,6 @@ def choose_chains():
     y.sort()
 
     chains_to_select = 9
-    print(y[:chains_to_select])
     chosen_chains = []
     for z in y[:chains_to_select]:
         for chain_dir in os.listdir('Chains'):
@@ -60,7 +74,6 @@ def choose_chains():
             x = x.exp_loglik.to_list()
             if x[0] == z:
                 chosen_chains.append(int(chain_dir.split('_')[1]))
-                print(x[0], z, int(chain_dir.split('_')[1]))
 
     chosen_chains.sort()
     # print(chosen_chains)
@@ -104,10 +117,76 @@ def xcorr(x, y, normed=True, detrend=False, maxlags=10):
     # print(c)
 
 
+def compute_exp_cd(chains):
+    c_sum = 0
+    c_sum_chain = 0
+    d_sum = 0
+    d_sum_chain = 0
+    for chain in chains:
+        chain_index = "%02d" % chain
+        f = open('Chains/chain_' + chain_index + '/chain_data.csv')
+        c_sum = 0
+        d_sum = 0
+        for line in f.readlines():
+            c_sum += float(line.split(',')[3].split(' ')[0].strip())
+            d_sum += float(line.split(',')[4].split(' ')[0].strip())
+        c_sum_chain += (c_sum / 1000)
+        d_sum_chain += (d_sum / 1000)
+
+    return c_sum_chain / 9, d_sum_chain / 9
+
+
+def compute_exp_ages(chains):
+    coeff_sum = 0
+    coeff_sum_chain = 0
+    for chain in chains:
+        chain_index = "%02d" % chain
+        f1 = open('Chains/chain_' + chain_index + '/chain_data.csv')
+        coeff_sum = 0
+        for line in f1.readlines():
+            pi_chain = [int(i.strip())
+                        for i in line.split(',')[2].split(' ')[:124]]
+            # _, coeff = xcorr(pi_chain, np.arange(0, 124), maxlags=1)
+            coeff = pearsonr(pi_chain, np.arange(0, 124))
+            coeff_sum += coeff[0]
+        coeff_sum_chain += (coeff_sum / 1000)
+
+    return coeff_sum_chain / 9
+
+
+def compute_pair_order_matrix(chains):
+    po_matrix = np.zeros(shape=(124, 124))
+    po_matrix_chain = np.zeros(shape=(124, 124))
+    for chain in chains:
+        chain_index = "%02d" % chain
+        f = open('Chains/chain_' + chain_index + '/chain_data.csv')
+        for line in f.readlines():
+            pi_sites_chain = [int(i.strip())
+                              for i in line.split(',')[2].split(' ')[:124]]
+            generate_po_matrix(pi_sites_chain, po_matrix_chain)
+        po_matrix_chain /= 1000
+        po_matrix += po_matrix_chain
+    po_matrix /= 9
+    plot_po_matrix(po_matrix)
+
+
+def generate_po_matrix(pi_sites, po_matrix):
+    for i in range(124):
+        for j in range(124):
+            if i == j:
+                po_matrix[i][j] += -1
+            else:
+                po_matrix[i][j] += int(pi_sites[i] < pi_sites[j])
+
+
+def plot_po_matrix(po_matrix):
+    sns.set()
+    ax = sns.heatmap(po_matrix, vmin=0, vmax=1, cmap='Greys')
+    plt.gca().invert_yaxis()
+    plt.show()
+
+
 if __name__ == "__main__":
-    run_all_chains()
+    # run_all_chains()
     chains = choose_chains()
-    print(len(chains))
-    # f = open('Chains/chain_00/chain_data.csv')
-    # for line in f.readlines():
-    #     print(line.split(',')[2].split())
+    compute_pair_order_matrix(chains)
