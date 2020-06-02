@@ -1,0 +1,14 @@
+appdirs==1.4.3
+appdirs==1.4.3
+cycler==0.10.0
+Cython==0.29.19
+kiwisolver==1.2.0
+matplotlib==3.2.1
+numpy==1.18.4
+pandas==1.0.4
+pyparsing==2.4.7
+python-dateutil==2.8.1
+pytz==2020.1
+scipy==1.4.1
+seaborn==0.10.1
+six==1.15.0
