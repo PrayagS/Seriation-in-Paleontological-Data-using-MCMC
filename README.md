@@ -35,5 +35,6 @@ The detailed results along with their inferences can be found in our [report](ht
 
 ## Acknowledgements
 
-Paper Source: Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods
-Puolamäki K, Fortelius M, Mannila H (2006) Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods. PLOS Computational Biology 2(2): e6. https://doi.org/10.1371/journal.pcbi.0020006
+- Paper Source: Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods
+  Puolamäki K, Fortelius M, Mannila H (2006) Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods. PLOS     Computational Biology 2(2): e6. https://doi.org/10.1371/journal.pcbi.0020006
+- [log.c](https://github.com/rxi/log.c). An excellent logging library used while testing our C code.
