@@ -1,5 +1,14 @@
 # Seriation in Paleontological data using MCMC
 
+## Table of Contents
+
+- [Abstract](#abstract)
+- [Implementation details](#implementation-details)
+- [Dataset](#dataset)
+- [Results](#results)
+- [Usage](#usage)
+- [Acknowledgements](#acknowledgements)
+
 ## Abstract
 
 > Given a collection of fossil sites with data about the taxa that occur in each site, the task in biochronology is to find good estimates for the ages or ordering of sites. We describe a full probabilistic model for fossil data. The parameters of the model are natural: the ordering of the sites, the origination and extinction times for each taxon, and the probabilities of different types of errors. We show that the posterior distributions of these parameters can be estimated reliably by using Markov chain Monte Carlo techniques. The posterior distributions of the model parameters can be used to answer many different questions about the data, including seriation (finding the best ordering of the sites) and outlier detection. We demonstrate the usefulness of the model and estimation method on synthetic data and on real data on large late Cenozoic mammals. As an example, for the sites with large number of occurrences of common genera, our methods give orderings, whose correlation with geochronologic ages is 0.95.
