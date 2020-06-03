@@ -35,9 +35,4 @@ The detailed results along with their inferences can be found in our [report](ht
 
 ## Acknowledgements
 
-- The original C source code is from the authors' of the paper.
-    - Article Source: Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods
-Puolamäki K, Fortelius M, Mannila H (2006) Seriation in Paleontological Data Using Markov Chain Monte Carlo Methods. PLOS Computational Biology 2(2): e6. https://doi.org/10.1371/journal.pcbi.0020006 
-- [log.c](https://github.com/rxi/log.c). An excellent logging library used while testing our C code.
-
-  License and copyright notices for them can be found [here](https://github.com/PrayagS/Seriation_in_Paleontological_Data_using_MCMC/blob/master/ACKNOWLEDGMENTS.md).
+License and copyright notices for all the sources referred can be found [here](https://github.com/PrayagS/Seriation_in_Paleontological_Data_using_MCMC/blob/master/ACKNOWLEDGMENTS.md).
